@@ -1,7 +1,9 @@
 //! Generic point trait definition and implementation of trait for main point structures
 //! natively supported in this library.
 
+
 use glam::{Vec2, Vec3, Vec4};
+use nalgebra::{Vector2, Vector3, Vector4};
 
 /// A type that can be used as a point in spline definition and computation.
 ///
@@ -24,7 +26,8 @@ pub trait Point{
     fn lerp(&self, other: &Self, t: f32) -> Self;
 }
 
-// `Splinex` internal data structures
+
+// `splinex` internal data structures
 
 /// Defines a two-dimensional points
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -115,3 +118,148 @@ impl Point for Vec4{
     }
 }
 
+// nalgebra support
+
+impl Point for Vector2<f32>{
+    fn distance(&self, other: &Self) -> f32 {
+        self.metric_distance(other)
+    }
+    fn lerp(&self, other: &Self, t: f32) -> Self {
+        assert!((0.0..=1.0).contains(&t), "`t` must be in [0.0, 1.0], got {t}");
+        self.lerp(other, t)
+    }
+}
+
+impl Point for Vector3<f32>{
+    fn distance(&self, other: &Self) -> f32 {
+        self.metric_distance(other)
+    }
+    fn lerp(&self, other: &Self, t: f32) -> Self {
+        assert!((0.0..=1.0).contains(&t), "`t` must be in [0.0, 1.0], got {t}");
+        self.lerp(other, t)
+    }
+}
+
+impl Point for Vector4<f32>{
+    fn distance(&self, other: &Self) -> f32 {
+        self.metric_distance(other)
+    }
+    fn lerp(&self, other: &Self, t: f32) -> Self {
+        assert!((0.0..=1.0).contains(&t), "`t` must be in [0.0, 1.0], got {t}");
+        self.lerp(other, t)
+    }
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    /// Asserts that a Point2D can be created
+    #[test]
+    fn test_point_2d_creation() {
+        let tested_point = Point2D{x: 1.0, y: 2.0};
+
+        assert_eq!(tested_point.x, 1.0);
+        assert_eq!(tested_point.y, 2.0);
+    }
+
+    /// Asserts that a Point2D can be modified
+    #[test]
+    fn test_point_2d_mutation() {
+        let mut tested_point = Point2D{x: 1.0, y: 2.0};
+
+        tested_point.x = 3.0;
+        assert_eq!(tested_point.x, 3.0);
+    }
+
+    /// Asserts that distance between two Point2D can be computed
+    #[test]
+    fn test_point_2d_distance() {
+        let a = Point2D { x: 1.0, y: 2.0 };
+        let b = Point2D { x: 4.0, y: 6.0 };
+
+        let distance_from_a = a.distance(&b);
+        let distance_from_b = b.distance(&a);
+
+        // tests euclidean distance symmetry
+        assert_eq!(distance_from_a, distance_from_b);
+        assert_eq!(distance_from_a, 5.0);
+    }
+
+    /// Asserts that valid linear interpolations between two Point2D can be computed
+    #[test]
+    fn test_point_2d_lerp() {
+        let a = Point2D { x: 1.0, y: 2.0 };
+        let b = Point2D { x: 4.0, y: 6.0 };
+
+        assert_eq!(a.lerp(&b, 1.0), Point2D { x: 1.0, y: 2.0 });
+        assert_eq!(a.lerp(&b, 0.0), Point2D { x: 4.0, y: 6.0 });
+        assert_eq!(a.lerp(&b, 0.5), Point2D { x: 2.5, y: 4.0 });
+    }
+
+    /// Asserts that lerp panic when given a wrong input parameter for point 2D
+    #[test]
+    #[should_panic(expected = "`t` must be in [0.0, 1.0], got 1.1")]
+    fn test_point_2d_lerp_panic() {
+        let a = Point2D { x: 1.0, y: 2.0 };
+        let b = Point2D { x: 4.0, y: 6.0 };
+
+        a.lerp(&b, 1.1);
+    }
+
+
+    /// Asserts that a Point3D can be created
+    #[test]
+    fn test_point_3d_creation() {
+        let tested_point = Point3D{x: 1.0, y: 2.0, z: 3.0};
+
+        assert_eq!(tested_point.x, 1.0);
+        assert_eq!(tested_point.y, 2.0);
+        assert_eq!(tested_point.z, 3.0);
+    }
+
+    /// Asserts that a Point3D can be modified
+    #[test]
+    fn test_point_3d_mutation() {
+        let mut tested_point = Point3D{x: 1.0, y: 2.0, z: 3.0};
+
+        tested_point.z = 4.0;
+        assert_eq!(tested_point.z, 4.0);
+    }
+
+    /// Asserts that distance between two Point3D can be computed
+    #[test]
+    fn test_point_3d_distance() {
+        let a = Point3D { x: 4.0, y: 1.0, z: 3.0 };
+        let b = Point3D { x: 6.0, y: 4.0, z: 9.0 };
+
+        let distance_from_a = a.distance(&b);
+        let distance_from_b = b.distance(&a);
+
+        // tests euclidean distance symmetry
+        assert_eq!(distance_from_a, distance_from_b);
+        assert_eq!(distance_from_a, 7.0);
+    }
+
+    /// Asserts that valid linear interpolations between two Point3D can be computed
+    #[test]
+    fn test_point_3d_lerp() {
+        let a = Point3D { x: 4.0, y: 1.0, z: 3.0 };
+        let b = Point3D { x: 6.0, y: 4.0, z: 9.0 };
+
+        assert_eq!(a.lerp(&b, 1.0), Point3D { x: 4.0, y: 1.0, z: 3.0});
+        assert_eq!(a.lerp(&b, 0.0), Point3D { x: 6.0, y: 4.0, z: 9.0});
+        assert_eq!(a.lerp(&b, 0.5), Point3D { x: 5.0, y: 2.5, z: 6.0});
+    }
+
+    /// Asserts that lerp panic when given a wrong input parameter for Point3D
+    #[test]
+    #[should_panic(expected = "`t` must be in [0.0, 1.0], got 1.1")]
+    fn test_point_3d_lerp_panic() {
+        let a = Point3D { x: 4.0, y: 1.0, z: 3.0 };
+        let b = Point3D { x: 6.0, y: 4.0, z: 9.0 };
+
+        a.lerp(&b, 1.1);
+    }
+}
