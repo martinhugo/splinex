@@ -328,4 +328,57 @@ mod tests {
 
         a.lerp(&b, 1.1);
     }
+
+    /// Asserts that glam::Vec2 is supported as a Point
+    #[test]
+    fn test_basic_vec2d_glam_support() {
+        let a = Vec2 { x: 1.0, y: 2.0 };
+        let b = Vec2 { x: 4.0, y: 6.0 };
+
+        assert_eq!(<Vec2 as Point>::distance(&a, &b), 5.0);
+    }
+
+    /// Asserts that glam::Vec2 panics when a wrong parameter is given to lerp
+    #[test]
+    #[should_panic(expected = "`t` must be in [0.0, 1.0], got 1.1")]
+    fn test_basic_vec2d_glam_lerp_panic() {
+        let a = Vec2 { x: 1.0, y: 2.0 };
+        let b = Vec2 { x: 4.0, y: 6.0 };
+
+        <Vec2 as Point>::lerp(&a, &b, 1.1);
+    }
+
+    /// Asserts that glam::Vec2 is supported as a Point
+    #[test]
+    fn test_basic_vec3d_glam_support() {
+        let a = Vec3 {
+            x: 4.0,
+            y: 1.0,
+            z: 3.0,
+        };
+        let b = Vec3 {
+            x: 6.0,
+            y: 4.0,
+            z: 9.0,
+        };
+
+        assert_eq!(<Vec3 as Point>::distance(&a, &b), 7.0);
+    }
+
+    #[test]
+    #[should_panic(expected = "`t` must be in [0.0, 1.0], got 1.1")]
+    fn test_basic_vec3d_glam_lerp_panic() {
+        let a = Vec3 {
+            x: 4.0,
+            y: 1.0,
+            z: 3.0,
+        };
+        let b = Vec3 {
+            x: 6.0,
+            y: 4.0,
+            z: 9.0,
+        };
+
+        <Vec3 as Point>::lerp(&a, &b, 1.1);
+    }
 }
