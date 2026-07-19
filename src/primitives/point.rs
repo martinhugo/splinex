@@ -45,8 +45,8 @@ impl Point for Point2D {
         );
 
         Self {
-            x: (1.0-s) * self.x + s * rhs.x,
-            y: (1.0-s) * self.y + s * rhs.y,
+            x: (1.0 - s) * self.x + s * rhs.x,
+            y: (1.0 - s) * self.y + s * rhs.y,
         }
     }
 }
@@ -61,8 +61,7 @@ pub struct Point3D {
 
 impl Point for Point3D {
     fn distance(&self, rhs: &Self) -> f32 {
-        ((rhs.x - self.x).powi(2) + (rhs.y - self.y).powi(2) + (rhs.z - self.z).powi(2))
-            .sqrt()
+        ((rhs.x - self.x).powi(2) + (rhs.y - self.y).powi(2) + (rhs.z - self.z).powi(2)).sqrt()
     }
 
     fn lerp(&self, rhs: &Self, s: f32) -> Self {
