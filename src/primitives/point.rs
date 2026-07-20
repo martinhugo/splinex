@@ -3,6 +3,7 @@
 
 use glam::{Vec2, Vec3, Vec4};
 use nalgebra::{Vector2, Vector3, Vector4};
+use num_traits::Float;
 
 /// A type that can be used as a point in spline definition and computation.
 ///
@@ -10,8 +11,11 @@ use nalgebra::{Vector2, Vector3, Vector4};
 /// in spline computation, enabling support for 2D, 3D, or any
 /// custom coordinate space.
 pub trait Point {
+    /// Scalar type for each coordinates of the point
+    type Scalar;
+
     /// Returns the distance between `self` and `rhs`
-    fn distance(&self, rhs: &Self) -> f32;
+    fn distance(&self, rhs: &Self) -> Self::Scalar;
 
     /// Linearly interpolates between `self` and `rhs`
     ///
@@ -21,59 +25,63 @@ pub trait Point {
     /// # Panics
     ///
     /// Implementation may panic if `s` is outside `[0.0, 1.0]`.
-    fn lerp(&self, rhs: &Self, s: f32) -> Self;
+    fn lerp(&self, rhs: &Self, s: Self::Scalar) -> Self;
 }
 
 // `splinex` internal data structures
 
 /// Defines a two-dimensional points
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Point2D {
-    pub x: f32,
-    pub y: f32,
+pub struct Point2D<T> {
+    pub x: T,
+    pub y: T,
 }
 
-impl Point for Point2D {
-    fn distance(&self, rhs: &Self) -> f32 {
+impl<T: Float + std::fmt::Display> Point for Point2D<T> {
+    type Scalar = T;
+
+    fn distance(&self, rhs: &Self) -> Self::Scalar {
         ((rhs.x - self.x).powi(2) + (rhs.y - self.y).powi(2)).sqrt()
     }
 
-    fn lerp(&self, rhs: &Self, s: f32) -> Self {
+    fn lerp(&self, rhs: &Self, s: Self::Scalar) -> Self {
         assert!(
-            (0.0..=1.0).contains(&s),
+            (T::zero()..=T::one()).contains(&s),
             "`s` must be in [0.0, 1.0], got {s}"
         );
 
         Self {
-            x: (1.0 - s) * self.x + s * rhs.x,
-            y: (1.0 - s) * self.y + s * rhs.y,
+            x: (T::one() - s) * self.x + s * rhs.x,
+            y: (T::one() - s) * self.y + s * rhs.y,
         }
     }
 }
 
 /// Defines a three-dimensional points
 #[derive(Debug, Clone, Copy, PartialEq)]
-pub struct Point3D {
-    pub x: f32,
-    pub y: f32,
-    pub z: f32,
+pub struct Point3D<T> {
+    pub x: T,
+    pub y: T,
+    pub z: T,
 }
 
-impl Point for Point3D {
-    fn distance(&self, rhs: &Self) -> f32 {
+impl<T: Float + std::fmt::Display> Point for Point3D<T> {
+    type Scalar = T;
+
+    fn distance(&self, rhs: &Self) -> Self::Scalar {
         ((rhs.x - self.x).powi(2) + (rhs.y - self.y).powi(2) + (rhs.z - self.z).powi(2)).sqrt()
     }
 
-    fn lerp(&self, rhs: &Self, s: f32) -> Self {
+    fn lerp(&self, rhs: &Self, s: Self::Scalar) -> Self {
         assert!(
-            (0.0..=1.0).contains(&s),
+            (T::zero()..=T::one()).contains(&s),
             "`s` must be in [0.0, 1.0], got {s}"
         );
 
         Self {
-            x: (1.0 - s) * self.x + s * rhs.x,
-            y: (1.0 - s) * self.y + s * rhs.y,
-            z: (1.0 - s) * self.z + s * rhs.z,
+            x: (T::one() - s) * self.x + s * rhs.x,
+            y: (T::one() - s) * self.y + s * rhs.y,
+            z: (T::one() - s) * self.z + s * rhs.z,
         }
     }
 }
@@ -82,6 +90,8 @@ impl Point for Point3D {
 
 // glam support
 impl Point for Vec2 {
+    type Scalar = f32;
+
     fn distance(&self, rhs: &Self) -> f32 {
         (*self - *rhs).length()
     }
@@ -96,6 +106,8 @@ impl Point for Vec2 {
 }
 
 impl Point for Vec3 {
+    type Scalar = f32;
+
     fn distance(&self, rhs: &Self) -> f32 {
         (*self - *rhs).length()
     }
@@ -110,6 +122,8 @@ impl Point for Vec3 {
 }
 
 impl Point for Vec4 {
+    type Scalar = f32;
+
     fn distance(&self, rhs: &Self) -> f32 {
         (*self - *rhs).length()
     }
@@ -125,39 +139,46 @@ impl Point for Vec4 {
 
 // nalgebra support
 
-impl Point for Vector2<f32> {
-    fn distance(&self, rhs: &Self) -> f32 {
+impl<T: nalgebra::RealField + std::fmt::Display> Point for Vector2<T> {
+    type Scalar = T;
+
+    fn distance(&self, rhs: &Self) -> Self::Scalar {
         self.metric_distance(rhs)
     }
-    fn lerp(&self, rhs: &Self, s: f32) -> Self {
+
+    fn lerp(&self, rhs: &Self, s: Self::Scalar) -> Self {
         assert!(
-            (0.0..=1.0).contains(&s),
+            (T::zero()..=T::one()).contains(&s),
             "`s` must be in [0.0, 1.0], got {s}"
         );
         self.lerp(rhs, s)
     }
 }
 
-impl Point for Vector3<f32> {
-    fn distance(&self, rhs: &Self) -> f32 {
+impl<T: nalgebra::RealField + std::fmt::Display> Point for Vector3<T> {
+    type Scalar = T;
+
+    fn distance(&self, rhs: &Self) -> Self::Scalar {
         self.metric_distance(rhs)
     }
-    fn lerp(&self, rhs: &Self, s: f32) -> Self {
+    fn lerp(&self, rhs: &Self, s: Self::Scalar) -> Self {
         assert!(
-            (0.0..=1.0).contains(&s),
+            (T::zero()..=T::one()).contains(&s),
             "`s` must be in [0.0, 1.0], got {s}"
         );
         self.lerp(rhs, s)
     }
 }
 
-impl Point for Vector4<f32> {
-    fn distance(&self, rhs: &Self) -> f32 {
+impl<T: nalgebra::RealField + std::fmt::Display> Point for Vector4<T> {
+    type Scalar = T;
+
+    fn distance(&self, rhs: &Self) -> Self::Scalar {
         self.metric_distance(rhs)
     }
-    fn lerp(&self, rhs: &Self, s: f32) -> Self {
+    fn lerp(&self, rhs: &Self, s: Self::Scalar) -> Self {
         assert!(
-            (0.0..=1.0).contains(&s),
+            (T::zero()..=T::one()).contains(&s),
             "`s` must be in [0.0, 1.0], got {s}"
         );
         self.lerp(rhs, s)
